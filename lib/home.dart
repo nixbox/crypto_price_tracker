@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'model/currency.dart';
 import 'serializers.dart';
 
-final String url = "https://api.coinmarketcap.com/v1/ticker/?limit=10";
+final String url = "https://api.coinmarketcap.com/v1/ticker/?limit=8";
 final String iconBaseUrl =
     "https://raw.githubusercontent.com/atomiclabs/cryptocurrency-icons/master/128/color/";
 final standardSerializers = (serializers.toBuilder()..addPlugin(
@@ -48,18 +48,7 @@ class _PriceTrackerState extends State<PriceTracker> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: FutureBuilder<List<Currency>>(
-        future: fetchCurrencies(http.Client()),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            snapshot.data.forEach((currency) {
-              print(currency.symbol);
-            });
-          }
-          return snapshot.hasData ? CurrencyList(currencies: snapshot.data)
-              : Center(child: CircularProgressIndicator());
-        }
-      ),
+      body: CurrencyList(),
     );
   }
 }
@@ -77,69 +66,91 @@ List<Currency> parseCurrencies(String responseBody) {
   }).toList();
 }
 
-class CurrencyList extends StatelessWidget {
-  final List<Currency> currencies;
+class CurrencyList extends StatefulWidget {
+  CurrencyList({Key key}) : super(key: key);
 
-  const CurrencyList({Key key, this.currencies}) : super(key: key);
+  @override
+  CurrencyListState createState() {
+    return new CurrencyListState();
+  }
+}
+
+class CurrencyListState extends State<CurrencyList> {
+  List<Currency> currencies = List<Currency>();
+
+  @override
+  initState() {
+    super.initState();
+    _refresh();
+  }
+
+  Future<Null> _refresh() {
+    return fetchCurrencies(http.Client()).then((_currencies) {
+      setState(() => currencies = _currencies);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: currencies.length,
-      itemBuilder: (context, index) {
-        var name = currencies[index].name;
-        var price = double.parse(currencies[index].price_usd).toStringAsFixed(2);
-        var gain = double.parse(currencies[index].percent_change_24h) > 0;
-        var percentChange = currencies[index].percent_change_24h;
-        var iconUrl = iconBaseUrl + currencies[index].symbol.toLowerCase() + ".png";
-        var priceTextStyle;
-        if (gain) {
-          priceTextStyle = TextStyle(fontSize: 20, color: Colors.green);
-        } else {
-          priceTextStyle = TextStyle(fontSize: 20, color: Colors.red);
-        }
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: ListView.builder(
+        itemCount: currencies.length,
+        itemBuilder: (context, index) {
+          var name = currencies[index].name;
+          var price = double.parse(currencies[index].price_usd).toStringAsFixed(2);
+          var gain = double.parse(currencies[index].percent_change_24h) > 0;
+          var percentChange = currencies[index].percent_change_24h;
+          var iconUrl = iconBaseUrl + currencies[index].symbol.toLowerCase() + ".png";
+          var priceTextStyle;
+          if (gain) {
+            priceTextStyle = TextStyle(fontSize: 20, color: Colors.green);
+          } else {
+            priceTextStyle = TextStyle(fontSize: 20, color: Colors.red);
+          }
 
-        return InkWell(
-          onTap: () {
-            print("Tapped");
-          },
-          child: Container(
-            padding: new EdgeInsets.all(20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                CircleAvatar(
-                  child: Image.network(iconUrl),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: new EdgeInsets.only(left: 10),
-                    child: Text(name, style: TextStyle(fontSize: 20,
-                        fontWeight: FontWeight.bold)),
+          return InkWell(
+            onTap: () {
+              print("Tapped");
+            },
+            child: Container(
+              padding: new EdgeInsets.all(20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  CircleAvatar(
+                    child: Image.network(iconUrl),
                   ),
-                ),
-                Column(
-                  children: <Widget>[
-                    Text(price, style: priceTextStyle, textAlign: TextAlign.right),
-                    Row(
-                      children: <Widget>[
-                        gain ? Icon(Icons.arrow_drop_up) :
-                            Icon(Icons.arrow_drop_down),
-                        DefaultTextStyle.merge(
-                          style: priceTextStyle,
-                          child: Text(percentChange,
-                              style: TextStyle(fontSize: 10),
+                  Expanded(
+                    child: Container(
+                      padding: new EdgeInsets.only(left: 10),
+                      child: Text(name, style: TextStyle(fontSize: 20,
+                          fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  Column(
+                    children: <Widget>[
+                      Text(price, style: priceTextStyle, textAlign: TextAlign.right),
+                      Row(
+                        children: <Widget>[
+                          gain ? Icon(Icons.arrow_drop_up) :
+                              Icon(Icons.arrow_drop_down),
+                          DefaultTextStyle.merge(
+                            style: priceTextStyle,
+                            child: Text(percentChange,
+                                style: TextStyle(fontSize: 10),
 //                              textAlign: TextAlign.right,
-                          )),
-                      ],
-                    )
-                  ],
-                )
-              ],
+                            )),
+                        ],
+                      )
+                    ],
+                  )
+                ],
+              )
             )
-          )
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
