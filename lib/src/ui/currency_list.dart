@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:crypto_price_tracker/src/model/currency.dart';
 import 'package:crypto_price_tracker/src/bloc/currencies_bloc.dart';
+// TODO: Remove this since it violates the Bloc pattern
+import 'package:crypto_price_tracker/src/resources/repository.dart';
 
 class CurrencyList extends StatefulWidget {
   CurrencyList({Key key}) : super(key: key);
@@ -68,6 +70,8 @@ class CurrencyListState extends State<CurrencyList> {
           return InkWell(
               onTap: () {
                 print("Tapped");
+                final repository = Repository();
+                repository.getPriceCandles();
               },
               child: Container(
                   padding: new EdgeInsets.all(20.0),

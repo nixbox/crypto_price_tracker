@@ -10,7 +10,7 @@ class CurrenciesBloc {
 
   Future<Null> fetchCurrencies() async {
     List<Currency> currencies = await _repository.getCurrencies();
-    _currenciesFetcher.sink.add(currencies);
+    _currenciesFetcher.add(currencies);
   }
 
   dispose() {

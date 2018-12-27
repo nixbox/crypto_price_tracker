@@ -12,11 +12,12 @@ final standardSerializers = (serializers.toBuilder()
       StandardJsonPlugin())).build();
 
 class CoinMarketCapApiProvider {
-  final String _url = "https://api.coinmarketcap.com/v1/ticker/?limit=8";
+  final String _tickerBaseUrl = "https://api.coinmarketcap.com/v1/";
 
   Client client = Client();
 
   Future<List<Currency>> fetchCurrencies() async {
+    final _url = _tickerBaseUrl + "ticker/?limit=8";
     final response = await client.get(_url);
     return compute(parseCurrencies, response.body);
   }
