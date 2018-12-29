@@ -37,7 +37,7 @@ class HitBTCApiProvider {
         "json": "true",
       },
     );
-    print(response.body);
+//    print(response.body);
     return compute(parseCandles, response.body);
   }
 }
@@ -46,7 +46,7 @@ List<HitBTCCandles> parseCandles(String responseBody) {
   final parsed = json.decode(responseBody);
   print(parsed);
   return parsed.map<HitBTCCandles>((candle) {
-    print(candle);
+//    print(candle);
     return standardSerializers.deserializeWith(HitBTCCandles.serializer, candle);
   }).toList();
 }

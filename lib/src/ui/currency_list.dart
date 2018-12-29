@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:crypto_price_tracker/src/model/currency.dart';
 import 'package:crypto_price_tracker/src/bloc/currencies_bloc.dart';
-// TODO: Remove this since it violates the Bloc pattern
-import 'package:crypto_price_tracker/src/resources/repository.dart';
+import 'package:crypto_price_tracker/src/ui/timeseries_price_chart.dart';
 
 class CurrencyList extends StatefulWidget {
   CurrencyList({Key key}) : super(key: key);
@@ -58,8 +57,9 @@ class CurrencyListState extends State<CurrencyList> {
           var name = currencies[index].name;
           var price = double.parse(currencies[index].price_usd).toStringAsFixed(2);
           var gain = double.parse(currencies[index].percent_change_24h) > 0;
-          var percentChange = currencies[index].percent_change_24h;
+          var percentChange = currencies[index].percent_change_24h + '%';
           var iconUrl = _iconBaseUrl + currencies[index].symbol.toLowerCase() + ".png";
+          var symbol = currencies[index].symbol;
           var priceTextStyle;
           if (gain) {
             priceTextStyle = TextStyle(fontSize: 20, color: Colors.green);
@@ -70,8 +70,6 @@ class CurrencyListState extends State<CurrencyList> {
           return InkWell(
               onTap: () {
                 print("Tapped");
-                final repository = Repository();
-                repository.getPriceCandles();
               },
               child: Container(
                   padding: new EdgeInsets.all(20.0),
@@ -86,6 +84,13 @@ class CurrencyListState extends State<CurrencyList> {
                           padding: new EdgeInsets.only(left: 10),
                           child: Text(name, style: TextStyle(fontSize: 20,
                               fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      Container(
+                        width: 125,
+                        height: 60,
+                        child: TimeSeriesPriceChart(
+                          symbol: symbol,
                         ),
                       ),
                       Column(

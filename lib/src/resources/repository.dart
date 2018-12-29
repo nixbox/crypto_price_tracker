@@ -8,5 +8,6 @@ class Repository {
   final hitBTCApiProvider = HitBTCApiProvider();
 
   Future<List<Currency>> getCurrencies() => cmcApiProvider.fetchCurrencies();
-  getPriceCandles() => hitBTCApiProvider.fetchHourlyPriceData("BTC");
+  getPriceCandles(String symbol) =>
+      hitBTCApiProvider.fetchHourlyPriceData(symbol);
 }

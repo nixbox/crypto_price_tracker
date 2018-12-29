@@ -10,6 +10,7 @@ class CurrenciesBloc {
 
   Future<Null> fetchCurrencies() async {
     List<Currency> currencies = await _repository.getCurrencies();
+    currencies.removeWhere((currency) => currency.symbol == "XRP");
     _currenciesFetcher.add(currencies);
   }
 
