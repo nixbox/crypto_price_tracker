@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:crypto_price_tracker/src/model/currency.dart';
+import 'package:crypto_price_tracker/src/model/hitbtc_ticker.dart';
 import 'package:crypto_price_tracker/src/bloc/currencies_bloc.dart';
+import 'package:crypto_price_tracker/src/bloc/price_candles_bloc.dart';
 import 'package:crypto_price_tracker/src/ui/timeseries_price_chart.dart';
 
 class CurrencyList extends StatefulWidget {
@@ -60,6 +63,9 @@ class CurrencyListState extends State<CurrencyList> {
           var percentChange = currencies[index].percent_change_24h + '%';
           var iconUrl = _iconBaseUrl + currencies[index].symbol.toLowerCase() + ".png";
           var symbol = currencies[index].symbol;
+
+          priceCandlesBloc.subscribeTicker(symbol);
+
           var priceTextStyle;
           if (gain) {
             priceTextStyle = TextStyle(fontSize: 20, color: Colors.green);
@@ -95,7 +101,25 @@ class CurrencyListState extends State<CurrencyList> {
                       ),
                       Column(
                         children: <Widget>[
-                          Text(price, style: priceTextStyle, textAlign: TextAlign.right),
+//                          Text(price, style: priceTextStyle, textAlign: TextAlign.right),
+                          StreamBuilder(
+                            stream: priceCandlesBloc.ticker(symbol),
+                            builder: (BuildContext context,
+                                AsyncSnapshot<HitBTCTicker> snapshot) {
+                              if (snapshot.hasData) {
+                                HitBTCTicker ticker = snapshot.data;
+                                String price = double.parse(
+                                    ticker.last).toStringAsFixed(2);
+                                return Text(price, style: priceTextStyle,
+                                    textAlign: TextAlign.right);
+
+                              } else if (snapshot.hasError) {
+                                return Text(snapshot.error.toString());
+                              } else {
+                                return Row();
+                              }
+                            }
+                          ),
                           Row(
                             children: <Widget>[
                               gain ? Icon(Icons.arrow_drop_up) :

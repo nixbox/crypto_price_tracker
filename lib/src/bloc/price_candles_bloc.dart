@@ -1,6 +1,7 @@
 import 'package:crypto_price_tracker/src/model/timeseries_price.dart';
 import 'package:crypto_price_tracker/src/resources/repository.dart';
 import 'package:crypto_price_tracker/src/model/hitbtc_candles.dart';
+import 'package:crypto_price_tracker/src/model/hitbtc_ticker.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:built_value/standard_json_plugin.dart';
 import 'package:built_value/iso_8601_date_time_serializer.dart';
@@ -15,6 +16,8 @@ final standardSerializers = (serializers.toBuilder()
 
 class PriceCandlesBloc {
   Map<String, PublishSubject<List<HitBTCCandles>>> priceCandlesFetcher = Map<String, PublishSubject<List<HitBTCCandles>>>();
+  Map<String, PublishSubject<HitBTCTicker>> tickerFetcher = Map<String, PublishSubject<HitBTCTicker>>();
+
   final _repository = Repository();
 
   static final PriceCandlesBloc _singleton = PriceCandlesBloc._internal();
@@ -34,6 +37,12 @@ class PriceCandlesBloc {
     return priceCandlesFetcher[symbol].stream;
   }
 
+  Observable<HitBTCTicker> ticker(String symbol) {
+    if (!tickerFetcher.containsKey(symbol))
+      tickerFetcher[symbol] = PublishSubject<HitBTCTicker>();
+    return tickerFetcher[symbol].stream;
+  }
+
   Future<Null> fetchCandles(String symbol) async {
     if (!priceCandlesFetcher.containsKey(symbol))
       priceCandlesFetcher[symbol] = PublishSubject<List<HitBTCCandles>>();
@@ -47,12 +56,20 @@ class PriceCandlesBloc {
     await _repository.subscribeToPriceCandles(symbol);
   }
 
+  Future<void> subscribeTicker(String symbol) async {
+    if (!tickerFetcher.containsKey(symbol))
+      tickerFetcher[symbol] = PublishSubject<HitBTCTicker>();
+    await _repository.subscribeToTicker(symbol);
+  }
+
   _handleWebSocketData(dynamic data) {
     var parsed = json.decode(data);
     if (parsed['method'] == 'snapshotCandles')
       _handleSnapshotCandles(parsed['params']);
     else if (parsed['method'] == 'updateCandles')
       _handleUpdateCandles(parsed['params']);
+    else if (parsed['method'] == 'ticker')
+      _handleTicker(parsed['params']);
   }
 
   _symbol(String symbol) => symbol.substring(0, 3);
@@ -67,7 +84,14 @@ class PriceCandlesBloc {
   }
 
   _handleUpdateCandles(Map<String, dynamic> data) {
-//    print('Update for');
+    // TODO: Handle incremental update of candles
+  }
+
+  _handleTicker(Map<String, dynamic> data) {
+    print(data);
+    HitBTCTicker ticker = parseTicker(data);
+    print("Ticker: ${ticker.symbol} => ${ticker.last}");
+    tickerFetcher[_symbol(data['symbol'])].add(ticker);
   }
 
   dispose() {
@@ -79,6 +103,10 @@ List<HitBTCCandles> parseCandles(parsed) {
   return parsed.map<HitBTCCandles>((candle) =>
       standardSerializers.deserializeWith(
           HitBTCCandles.serializer, candle)).toList();
+}
+
+HitBTCTicker parseTicker(parsed) {
+  return standardSerializers.deserializeWith(HitBTCTicker.serializer, parsed);
 }
 
 var priceCandlesBloc = PriceCandlesBloc();

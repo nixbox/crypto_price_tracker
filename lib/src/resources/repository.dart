@@ -21,4 +21,7 @@ class Repository {
 
   Future<void> subscribeToPriceCandles(String symbol) async =>
       hitBTCWebSocket.subscribeCandles(symbol);
+
+  Future<void> subscribeToTicker(String symbol) async =>
+      hitBTCWebSocket.subscribeTicker(symbol);
 }

@@ -38,11 +38,9 @@ class HitBTCWebSocket {
 
   Future<void> subscribeTicker(String symbol) async {
     await _client.sendRequest(
-        "subscribeCandles",
+        "subscribeTicker",
         {
-          'symbol': '${symbol}USD',
-          'period': 'M30'
-
+          'symbol': '${symbol}USD'
         }
     );
   }
