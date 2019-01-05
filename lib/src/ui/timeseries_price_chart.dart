@@ -23,10 +23,11 @@ class TimeSeriesPriceChartState extends State<TimeSeriesPriceChart> {
 
   @override
   Widget build(BuildContext context) {
-    priceCandlesBlocMap[widget.symbol] = PriceCandlesBloc(widget.symbol);
-    priceCandlesBlocMap[widget.symbol].fetchCandles();
+//    priceCandlesBlocMap[widget.symbol].fetchCandles();
+    priceCandlesBloc.subscribeCandles(widget.symbol);
+
     return StreamBuilder(
-      stream: priceCandlesBlocMap[widget.symbol].candles,
+      stream: priceCandlesBloc.candles(widget.symbol),
       builder: (BuildContext context,
           AsyncSnapshot<List<HitBTCCandles>> snapshot) {
         if (snapshot.hasData) {
